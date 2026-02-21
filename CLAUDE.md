@@ -1,14 +1,57 @@
 # Inlog-Agent
 
 ## Project Overview
-- (TODO: describe the project)
+AI-assisted log structuring and visualization tool. Users upload timestamped text logs via a React frontend. A Claude agent (via `claude-agent-sdk`) reads the log, infers the best schema, creates SQLite tables, parses the file, and generates charts.
 
 ## Tech Stack
-- **Language**: Python 3.11+
+- **Backend**: Python 3.11+, FastAPI, Claude Agent SDK
+- **Frontend**: React 18, Vite
+- **Data**: SQLite, pandas, matplotlib
 
 ## Common Commands
-- `pip install -r requirements.txt` - Install dependencies
+- `./setup.sh` - Install all dependencies
+- `./setup.sh start` - Start backend + frontend together
+- `python server.py` - Start backend only (port 8000)
+- `cd frontend && npm run dev` - Start frontend only (port 5173)
 - `pytest -v` - Run tests
+
+## Quick Start
+```bash
+./setup.sh
+cp .env.example .env  # Add your ANTHROPIC_API_KEY
+./setup.sh start
+# Open http://localhost:5173
+```
+
+## Project Structure
+```
+server.py                  # FastAPI: /upload, /ask, /health + static serving
+agent_prompt.md            # System prompt for the log analysis agent
+core/
+  config.py                # Env loading, paths, logging setup
+  models.py                # Pydantic request/response models
+  agent.py                 # Claude Agent SDK query logic + prompt building
+plugin/
+  plugin.json
+  skills/
+    log-analysis/SKILL.md  # Schema inference + parsing + SQLite
+    log-viz/SKILL.md        # Chart generation
+frontend/
+  src/
+    App.jsx                # Landing -> two-pane layout
+    components/
+      FileDrop.jsx         # Drag-and-drop upload
+      FileList.jsx         # Uploaded files sidebar
+      ChatPane.jsx         # Chat interface
+      SchemaView.jsx       # Schema display in chat
+      ChartDisplay.jsx     # Chart images in chat
+samples/                   # Sample log files for testing
+data/                      # Runtime (gitignored)
+  uploads/                 # Uploaded log files
+  schemas/                 # Inferred schema JSON
+  store.db                 # SQLite database
+outputs/                   # Generated chart PNGs (gitignored)
+```
 
 ## Virtual Environment
 Always activate a Python virtual environment before running any Python commands or installing dependencies.

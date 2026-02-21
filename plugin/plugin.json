@@ -1,0 +1,5 @@
+{
+  "name": "inlog-agent",
+  "description": "Log analysis and visualization skills for structuring, parsing, and charting timestamped log files",
+  "version": "0.1.0"
+}
