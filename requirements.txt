@@ -1,7 +1,0 @@
-matplotlib
-pandas
-fastapi
-uvicorn
-claude-agent-sdk
-python-dotenv
-python-multipart

@@ -16,7 +16,7 @@ AI-assisted log structuring and visualization tool. Upload a timestamped text lo
 # Clone and enter the project
 cd inlog-agent
 
-# Run the setup script (creates venv, installs deps, etc.)
+# Run the setup script (installs deps via uv)
 ./setup.sh
 
 # Add your API key
@@ -28,13 +28,12 @@ cp .env.example .env
 
 ```bash
 # Start both backend and frontend
-./setup.sh start
+./start.sh
 
 # Or start them separately:
 
 # Backend (terminal 1)
-source .venv/bin/activate
-python server.py
+uv run python server.py
 
 # Frontend (terminal 2)
 cd frontend && npm run dev

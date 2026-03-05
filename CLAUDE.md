@@ -10,16 +10,16 @@ AI-assisted log structuring and visualization tool. Users upload timestamped tex
 
 ## Common Commands
 - `./setup.sh` - Install all dependencies
-- `./setup.sh start` - Start backend + frontend together
-- `python server.py` - Start backend only (port 8000)
+- `./start.sh` - Start backend + frontend together
+- `uv run python server.py` - Start backend only (port 8000)
 - `cd frontend && npm run dev` - Start frontend only (port 5173)
-- `pytest -v` - Run tests
+- `uv run pytest -v` - Run tests
 
 ## Quick Start
 ```bash
 ./setup.sh
 cp .env.example .env  # Add your ANTHROPIC_API_KEY
-./setup.sh start
+./start.sh
 # Open http://localhost:5173
 ```
 
@@ -54,7 +54,7 @@ outputs/                   # Generated chart PNGs (gitignored)
 ```
 
 ## Virtual Environment
-Always activate a Python virtual environment before running any Python commands or installing dependencies.
+This project uses `uv` for dependency management. Run Python commands via `uv run` (e.g. `uv run python server.py`). No manual venv activation needed.
 
 ---
 
