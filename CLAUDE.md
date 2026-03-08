@@ -11,9 +11,9 @@ AI-assisted log structuring and visualization tool. Users upload timestamped tex
 ## Common Commands
 - `./setup.sh` - Install all dependencies
 - `./start.sh` - Start backend + frontend together
-- `uv run python server.py` - Start backend only (port 8000)
+- `cd backend && uv run python server.py` - Start backend only (port 8000)
 - `cd frontend && npm run dev` - Start frontend only (port 5173)
-- `uv run pytest -v` - Run tests
+- `cd backend && uv run pytest -v` - Run tests
 
 ## Quick Start
 ```bash
@@ -25,17 +25,23 @@ cp .env.example .env  # Add your ANTHROPIC_API_KEY
 
 ## Project Structure
 ```
-server.py                  # FastAPI: /upload, /ask, /health + static serving
-agent_prompt.md            # System prompt for the log analysis agent
-core/
-  config.py                # Env loading, paths, logging setup
-  models.py                # Pydantic request/response models
-  agent.py                 # Claude Agent SDK query logic + prompt building
-plugin/
-  plugin.json
-  skills/
-    log-analysis/SKILL.md  # Schema inference + parsing + SQLite
-    log-viz/SKILL.md        # Chart generation
+backend/
+  server.py                # FastAPI: /upload, /ask, /health + static serving
+  core/
+    config.py              # Env loading, paths, logging setup
+    models.py              # Pydantic request/response models
+  agent/                   # Claude Agent SDK package
+    code/
+      agent.py             # Agent query logic + prompt building
+      skills/              # Skill implementations
+  tests/                   # pytest test suite
+  sample_logs/             # Sample log files for testing
+  data/                    # Runtime (gitignored)
+    uploads/               # Uploaded log files
+    schemas/               # Inferred schema JSON
+    store.db               # SQLite database
+  outputs/                 # Generated chart PNGs (gitignored)
+  pyproject.toml           # Python dependencies
 frontend/
   src/
     App.jsx                # Landing -> two-pane layout
@@ -45,16 +51,12 @@ frontend/
       ChatPane.jsx         # Chat interface
       SchemaView.jsx       # Schema display in chat
       ChartDisplay.jsx     # Chart images in chat
-samples/                   # Sample log files for testing
-data/                      # Runtime (gitignored)
-  uploads/                 # Uploaded log files
-  schemas/                 # Inferred schema JSON
-  store.db                 # SQLite database
-outputs/                   # Generated chart PNGs (gitignored)
+.env                       # API keys (gitignored)
+.env.example               # Template for .env
 ```
 
 ## Virtual Environment
-This project uses `uv` for dependency management. Run Python commands via `uv run` (e.g. `uv run python server.py`). No manual venv activation needed.
+This project uses `uv` for dependency management. The `.venv` lives at `backend/.venv`. All `uv run` commands must be run from `backend/`. No manual venv activation needed.
 
 ---
 

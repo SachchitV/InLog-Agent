@@ -33,7 +33,7 @@ cp .env.example .env
 # Or start them separately:
 
 # Backend (terminal 1)
-uv run python server.py
+cd backend && uv run python server.py
 
 # Frontend (terminal 2)
 cd frontend && npm run dev
@@ -44,17 +44,23 @@ Open http://localhost:5173 in your browser.
 ## Project Structure
 
 ```
-server.py                  # FastAPI server: /upload, /ask, /health
-agent_prompt.md            # System prompt for the Claude agent
-core/
-  config.py                # Env loading, paths, logging
-  models.py                # Pydantic request/response models
-  agent.py                 # Claude Agent SDK query logic
-plugin/
-  plugin.json
-  skills/
-    log-analysis/SKILL.md  # Schema inference + parsing skill
-    log-viz/SKILL.md        # Chart generation skill
+backend/
+  server.py                # FastAPI server: /upload, /ask, /health
+  core/
+    config.py              # Env loading, paths, logging
+    models.py              # Pydantic request/response models
+  agent/                   # Claude Agent SDK package
+    code/
+      agent.py             # Agent query logic
+      skills/              # Skill implementations
+  tests/                   # pytest test suite
+  sample_logs/             # Sample log files for testing
+  data/                    # Runtime (gitignored)
+    uploads/               # Uploaded log files
+    schemas/               # Inferred schema JSON
+    store.db               # SQLite database
+  outputs/                 # Generated chart PNGs (gitignored)
+  pyproject.toml           # Python dependencies
 frontend/
   src/
     App.jsx                # Landing -> two-pane layout
@@ -64,12 +70,8 @@ frontend/
       ChatPane.jsx         # Chat interface
       SchemaView.jsx       # Schema table display
       ChartDisplay.jsx     # Chart image display
-samples/                   # Sample log files for testing
-data/                      # Runtime (gitignored)
-  uploads/                 # Uploaded log files
-  schemas/                 # Inferred schema JSON
-  store.db                 # SQLite database
-outputs/                   # Generated chart PNGs (gitignored)
+.env                       # API keys (gitignored)
+.env.example               # Template for .env
 ```
 
 ## API Endpoints
@@ -83,7 +85,7 @@ outputs/                   # Generated chart PNGs (gitignored)
 
 ## Sample Logs
 
-Two sample files are included in `samples/` for testing:
+Two sample files are included in `backend/sample_logs/` for testing:
 
 - **`app_server.log`** — Application server log (88 lines): timestamps, levels, service sources, key=value pairs
 - **`web_access.log`** — Apache combined access log (62 lines): IPs, users, HTTP methods, status codes, user agents

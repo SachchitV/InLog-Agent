@@ -4,18 +4,15 @@
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$PROJECT_DIR"
 
 echo "==> Installing Python dependencies..."
-uv sync
+(cd "$PROJECT_DIR/backend" && uv sync)
 
 echo "==> Creating runtime directories..."
-mkdir -p data/uploads data/schemas outputs
+mkdir -p "$PROJECT_DIR/backend/data/uploads" "$PROJECT_DIR/backend/data/schemas" "$PROJECT_DIR/backend/outputs"
 
 echo "==> Installing frontend dependencies..."
-cd "$PROJECT_DIR/frontend"
-npm install --silent
-cd "$PROJECT_DIR"
+(cd "$PROJECT_DIR/frontend" && npm install --silent)
 
 echo ""
 echo "Setup complete. Next steps:"

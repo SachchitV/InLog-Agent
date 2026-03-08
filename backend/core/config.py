@@ -6,9 +6,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Project root directory
+# backend/ directory (parent of core/)
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(PROJECT_DIR / ".env")
+# Project root is one level above backend/
+ROOT_DIR = PROJECT_DIR.parent
+load_dotenv(ROOT_DIR / ".env")
 
 # Logging setup
 logging.basicConfig(
