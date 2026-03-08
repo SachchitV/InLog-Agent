@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    env_file: .env
+    volumes:
+      - backend-data:/app/backend/data
+      - backend-outputs:/app/backend/outputs
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  backend-data:
+  backend-outputs:

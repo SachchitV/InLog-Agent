@@ -10,33 +10,30 @@ AI-assisted log structuring and visualization tool. Upload a timestamped text lo
 4. Agent parses the full file, stores it in SQLite, and generates overview charts
 5. Continue chatting to ask questions, refine, or create more visualizations
 
-## Setup
+## Quick Start (Docker)
+
+The easiest way to run Inlog Agent on any OS (Windows, Mac, Linux):
 
 ```bash
-# Clone and enter the project
-cd inlog-agent
-
-# Run the setup script (installs deps via uv)
-./setup.sh
-
-# Add your API key
 cp .env.example .env
 # Edit .env and set ANTHROPIC_API_KEY=sk-ant-...
+
+docker compose up
 ```
 
-## Running
+Open http://localhost:5173 in your browser.
+
+## Manual Setup
+
+Requires Python 3.11+, [uv](https://docs.astral.sh/uv/), and Node.js 18+.
 
 ```bash
-# Start both backend and frontend
+./setup.sh
+
+cp .env.example .env
+# Edit .env and set ANTHROPIC_API_KEY=sk-ant-...
+
 ./start.sh
-
-# Or start them separately:
-
-# Backend (terminal 1)
-cd backend && uv run python server.py
-
-# Frontend (terminal 2)
-cd frontend && npm run dev
 ```
 
 Open http://localhost:5173 in your browser.
@@ -85,7 +82,7 @@ frontend/
 
 ## Sample Logs
 
-Two sample files are included in `backend/sample_logs/` for testing:
+Two sample files are included in `sample_logs/` for testing:
 
 - **`app_server.log`** — Application server log (88 lines): timestamps, levels, service sources, key=value pairs
 - **`web_access.log`** — Apache combined access log (62 lines): IPs, users, HTTP methods, status codes, user agents
