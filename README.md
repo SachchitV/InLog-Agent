@@ -12,7 +12,7 @@ AI-assisted log structuring and visualization tool. Upload a timestamped text lo
 
 ## Quick Start (Docker)
 
-The easiest way to run Inlog Agent on any OS (Windows, Mac, Linux):
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows, Mac, Linux):
 
 ```bash
 cp .env.example .env
