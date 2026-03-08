@@ -118,9 +118,26 @@ Process:
 2. Identify timestamp format, delimiter, fields present
 3. Write a schema inference script to `workspace/{sid}/scripts/`
 4. Infer the best schema (tables, columns, types)
-5. Write schema JSON to `../data/{sid}/schemas/{file_id}.json`
+5. Write schema JSON to `../data/{sid}/schemas/{file_id}.json` using the **exact** format below
 6. Present proposed schema to user
 7. Update state: `{"step": 2, "status": "awaiting_user"}`
+
+**Required schema JSON format** (do NOT deviate from this structure):
+```json
+{
+  "tables": [
+    {
+      "name": "table_name",
+      "columns": [
+        {"name": "col_name", "sql_type": "TEXT|INTEGER|REAL", "source_col_index": 0, "description": "..."}
+      ]
+    }
+  ]
+}
+```
+- `"tables"` MUST be an array (even for a single table)
+- Each table MUST have `"name"` and `"columns"`
+- You may add extra top-level keys (e.g. `"file_id"`, `"notes"`) but `"tables"` is mandatory
 
 ---
 
