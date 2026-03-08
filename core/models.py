@@ -18,3 +18,7 @@ class AskResponse(BaseModel):
     files: list[str]
     cost_usd: float | None = None
     num_turns: int | None = None
+
+
+class HealthResponse(BaseModel):
+    status: str

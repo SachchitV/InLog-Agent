@@ -8,9 +8,9 @@ from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from core.config import UPLOADS_DIR, OUTPUTS_DIR
-from core.models import UploadResponse, AskRequest, AskResponse
-from core.agent import run_agent
+from core.config import UPLOADS_DIR, OUTPUTS_DIR, ALLOWED_ORIGINS
+from core.models import UploadResponse, AskRequest, AskResponse, HealthResponse
+import agent.code.agent as _agent
 
 log = logging.getLogger("inlog-agent")
 
@@ -19,7 +19,7 @@ app = FastAPI(title="Inlog Agent", version="0.1.0")
 # CORS for local frontend dev server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -47,13 +47,13 @@ async def upload(file: UploadFile):
 async def ask(request: AskRequest):
     """Send a question to the Claude agent with file context."""
 
-    result = await run_agent(request.file_id, request.question)
+    result = await _agent.run_agent(request.file_id, request.question)
     return AskResponse(**result)
 
 
-@app.get("/health")
+@app.get("/health", response_model=HealthResponse)
 async def health():
-    return {"status": "ok"}
+    return HealthResponse(status="ok")
 
 
 if __name__ == "__main__":
