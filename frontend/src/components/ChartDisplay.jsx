@@ -1,11 +1,11 @@
 import React from "react";
 
 export default function ChartDisplay({ filePath }) {
-  // Convert absolute path to URL served by the backend
-  // e.g. "outputs/events_timeline.png" → "/outputs/events_timeline.png"
-  // or "/home/.../outputs/foo.png" → "/outputs/foo.png"
-  const filename = filePath.split("/").pop();
-  const url = `/outputs/${filename}`;
+  // Extract path relative to outputs/ directory
+  // e.g. "../outputs/abc123/chart.png" → "abc123/chart.png"
+  const idx = filePath.indexOf("outputs/");
+  const relativePath = idx >= 0 ? filePath.slice(idx + 8) : filePath.split("/").pop();
+  const url = `/outputs/${relativePath}`;
 
   return (
     <div style={styles.container}>

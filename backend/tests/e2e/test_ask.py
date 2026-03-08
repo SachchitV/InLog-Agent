@@ -51,10 +51,12 @@ def test_ask(client, sample_log):
         "/upload",
         files={"file": ("app_server.log", sample_log, "text/plain")},
     )
-    file_id = upload.json()["file_id"]
+    upload_data = upload.json()
+    file_id = upload_data["file_id"]
+    session_id = upload_data["session_id"]
 
-    with patch("agent.code.agent.query", new=_make_query_mock()):
-        resp = client.post("/ask", json={"file_id": file_id, "question": "Summarise errors."})
+    with patch("core.agent.query", new=_make_query_mock()):
+        resp = client.post("/ask", json={"session_id": session_id, "file_id": file_id, "question": "Summarise errors."})
 
     # Endpoint must respond successfully
     assert resp.status_code == 200
@@ -88,7 +90,9 @@ def test_ask_prompt_contains_file_id_and_question(client, sample_log):
         "/upload",
         files={"file": ("app_server.log", sample_log, "text/plain")},
     )
-    file_id = upload.json()["file_id"]
+    upload_data = upload.json()
+    file_id = upload_data["file_id"]
+    session_id = upload_data["session_id"]
     question = "How many errors occurred?"
 
     captured: dict = {}
@@ -102,8 +106,8 @@ def test_ask_prompt_contains_file_id_and_question(client, sample_log):
             is_error=False, num_turns=1, session_id="s", result="ok",
         )
 
-    with patch("agent.code.agent.query", new=_capturing_query):
-        client.post("/ask", json={"file_id": file_id, "question": question})
+    with patch("core.agent.query", new=_capturing_query):
+        client.post("/ask", json={"session_id": session_id, "file_id": file_id, "question": question})
 
     # file_id must appear in the prompt so the agent knows which log to read
     assert file_id in captured["prompt"]
@@ -146,22 +150,27 @@ def test_ask_missing_file_id(client):
 @pytest.mark.integration
 def test_ask_end_to_end(client, sample_log):
     """Full flow: upload → infer schema → confirm → assert charts generated."""
-    outputs_dir = Path(__file__).resolve().parent.parent.parent / "outputs"
-    schemas_dir = Path(__file__).resolve().parent.parent.parent / "data" / "schemas"
 
-    # Step 1: upload the sample log
+    # Step 1: upload the sample log (auto-creates session)
     upload_resp = client.post(
         "/upload",
         files={"file": ("app_server.log", sample_log, "text/plain")},
     )
     assert upload_resp.status_code == 200
-    file_id = upload_resp.json()["file_id"]
-    log.info("Uploaded file_id=%s", file_id)
+    upload_data = upload_resp.json()
+    file_id = upload_data["file_id"]
+    session_id = upload_data["session_id"]
+    log.info("Uploaded file_id=%s in session=%s", file_id, session_id)
+
+    # Session-scoped paths for assertions
+    backend_dir = Path(__file__).resolve().parent.parent.parent
+    schemas_dir = backend_dir / "data" / session_id / "schemas"
+    outputs_dir = backend_dir / "outputs" / session_id
 
     # Step 2: ask the agent to infer a schema
     infer_resp = client.post(
         "/ask",
-        json={"file_id": file_id, "question": "Analyse this log file."},
+        json={"session_id": session_id, "file_id": file_id, "question": "Analyse this log file."},
     )
     assert infer_resp.status_code == 200
     infer_data = infer_resp.json()
@@ -174,7 +183,7 @@ def test_ask_end_to_end(client, sample_log):
     # Step 3: confirm schema — triggers parsing + chart generation
     confirm_resp = client.post(
         "/ask",
-        json={"file_id": file_id, "question": "Looks good, parse it and generate charts."},
+        json={"session_id": session_id, "file_id": file_id, "question": "Looks good, parse it and generate charts."},
     )
     assert confirm_resp.status_code == 200
     confirm_data = confirm_resp.json()
@@ -183,7 +192,7 @@ def test_ask_end_to_end(client, sample_log):
     assert confirm_data["answer"], "Agent returned empty answer on confirm"
     log.info("Parsed + visualised: turns=%s cost=$%s", confirm_data["num_turns"], confirm_data["cost_usd"])
 
-    # At least one chart PNG must have been written to outputs/
+    # At least one chart PNG must have been written to outputs/{session_id}/
     chart_files = list(outputs_dir.glob("*.png"))
     assert len(chart_files) > 0, f"No chart PNGs found in {outputs_dir}"
     log.info("Generated %d chart(s): %s", len(chart_files), [f.name for f in chart_files])

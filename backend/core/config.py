@@ -22,9 +22,9 @@ logging.basicConfig(
 # CORS allowed origins (comma-separated in env, defaults to local dev)
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 
-# Runtime directories (server-owned)
-UPLOADS_DIR = PROJECT_DIR / "data" / "uploads"
+# Base directories — session subdirs created dynamically by core.session
+DATA_DIR = PROJECT_DIR / "data"
 OUTPUTS_DIR = PROJECT_DIR / "outputs"
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 

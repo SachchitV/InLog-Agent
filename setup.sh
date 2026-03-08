@@ -9,7 +9,7 @@ echo "==> Installing Python dependencies..."
 (cd "$PROJECT_DIR/backend" && uv sync)
 
 echo "==> Creating runtime directories..."
-mkdir -p "$PROJECT_DIR/backend/data/uploads" "$PROJECT_DIR/backend/data/schemas" "$PROJECT_DIR/backend/outputs"
+mkdir -p "$PROJECT_DIR/backend/data" "$PROJECT_DIR/backend/outputs"
 
 echo "==> Installing frontend dependencies..."
 (cd "$PROJECT_DIR/frontend" && npm install --silent)

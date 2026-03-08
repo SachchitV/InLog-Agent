@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import SchemaView from "./SchemaView";
 import ChartDisplay from "./ChartDisplay";
 
-export default function ChatPane({ fileId }) {
+export default function ChatPane({ fileId, sessionId }) {
   // Messages per file: { [fileId]: [{ role, content, files }] }
   const [messagesByFile, setMessagesByFile] = useState({});
   const [input, setInput] = useState("");
@@ -43,7 +43,7 @@ export default function ChatPane({ fileId }) {
     const res = await fetch("/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: text, file_id: fileId }),
+      body: JSON.stringify({ session_id: sessionId, file_id: fileId, question: text }),
     });
     const data = await res.json();
 

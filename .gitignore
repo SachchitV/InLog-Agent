@@ -21,6 +21,9 @@ build/
 data/
 outputs/
 
+# Agent workspace (session runtime data)
+backend/agent/workspace/*/
+
 # Frontend
 frontend/node_modules/
 frontend/dist/

@@ -30,18 +30,30 @@ backend/
   core/
     config.py              # Env loading, paths, logging setup
     models.py              # Pydantic request/response models
-  agent/                   # Claude Agent SDK package
-    code/
-      agent.py             # Agent query logic + prompt building
-      skills/              # Skill implementations
+    agent.py               # Claude Agent SDK wrapper + hook-based access control
+    session.py             # Session creation + path resolution
+  agent/                   # Pure Claude Code project (no Python — Markdown + workspace)
+    CLAUDE.md              # Agent identity, workflow, access rules
+    .claude/
+      settings.json        # CLI-mode deny rules
+      skills/
+        log-analysis/      # Schema inference + parsing skill
+        log-viz/           # Chart generation skill
+    workspace/             # Session runtime data (gitignored)
+      {sid}/
+        state.json
+        decisions.md
+        scripts/
   tests/                   # pytest test suite
-  sample_logs/             # Sample log files for testing
-  data/                    # Runtime (gitignored)
-    uploads/               # Uploaded log files
-    schemas/               # Inferred schema JSON
-    store.db               # SQLite database
-  outputs/                 # Generated chart PNGs (gitignored)
+  data/                    # Session-scoped runtime data (gitignored)
+    {sid}/
+      uploads/
+      schemas/
+      store.db
+  outputs/                 # Session-scoped chart PNGs (gitignored)
+    {sid}/*.png
   pyproject.toml           # Python dependencies
+sample_logs/               # Sample log files for testing
 frontend/
   src/
     App.jsx                # Landing -> two-pane layout

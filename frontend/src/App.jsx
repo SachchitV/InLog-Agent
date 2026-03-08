@@ -4,10 +4,12 @@ import FileList from "./components/FileList";
 import ChatPane from "./components/ChatPane";
 
 export default function App() {
-  // List of uploaded files: [{ file_id, filename }]
+  // List of uploaded files: [{ file_id, filename, session_id }]
   const [files, setFiles] = useState([]);
   // Currently active file for chat context
   const [activeFileId, setActiveFileId] = useState(null);
+  // Session ID (set on first upload)
+  const [sessionId, setSessionId] = useState(null);
   // App mode: "landing" or "workspace"
   const [mode, setMode] = useState("landing");
 
@@ -15,6 +17,7 @@ export default function App() {
   const handleFileUploaded = useCallback((fileInfo) => {
     setFiles((prev) => [...prev, fileInfo]);
     setActiveFileId(fileInfo.file_id);
+    setSessionId(fileInfo.session_id);
     setMode("workspace");
   }, []);
 
@@ -43,7 +46,7 @@ export default function App() {
         />
       </div>
       <div style={styles.main}>
-        <ChatPane fileId={activeFileId} />
+        <ChatPane fileId={activeFileId} sessionId={sessionId} />
       </div>
     </div>
   );

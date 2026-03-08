@@ -6,11 +6,13 @@ from pydantic import BaseModel
 class UploadResponse(BaseModel):
     file_id: str
     filename: str
+    session_id: str
 
 
 class AskRequest(BaseModel):
-    question: str
+    session_id: str
     file_id: str
+    question: str
 
 
 class AskResponse(BaseModel):

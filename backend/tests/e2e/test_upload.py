@@ -2,7 +2,7 @@
 
 import pytest
 
-from core.config import UPLOADS_DIR
+from core.config import DATA_DIR
 
 
 @pytest.mark.smoke
@@ -21,16 +21,18 @@ def test_upload(client, sample_log):
 
     data = resp.json()
 
-    # Response must contain a non-empty file_id string
+    # Response must contain a non-empty file_id and session_id
     assert "file_id" in data
     assert isinstance(data["file_id"], str)
     assert len(data["file_id"]) > 0
+    assert "session_id" in data
+    assert len(data["session_id"]) > 0
 
     # Filename echoed back must match what was sent
     assert data["filename"] == "app_server.log"
 
-    # File must be written to disk with exact content
-    saved = UPLOADS_DIR / f"{data['file_id']}.log"
+    # File must be written to session-scoped directory
+    saved = DATA_DIR / data["session_id"] / "uploads" / f"{data['file_id']}.log"
     assert saved.exists()
     assert saved.read_bytes() == sample_log
 
@@ -52,7 +54,7 @@ def test_upload_empty_file(client):
     assert data["file_id"]
 
     # Zero-byte file must exist on disk
-    saved = UPLOADS_DIR / f"{data['file_id']}.log"
+    saved = DATA_DIR / data["session_id"] / "uploads" / f"{data['file_id']}.log"
     assert saved.exists()
     assert saved.read_bytes() == b""
 
@@ -97,5 +99,5 @@ def test_upload_non_text_content(client):
     data = resp.json()
 
     # Binary content must be stored without corruption
-    saved = UPLOADS_DIR / f"{data['file_id']}.log"
+    saved = DATA_DIR / data["session_id"] / "uploads" / f"{data['file_id']}.log"
     assert saved.read_bytes() == binary_content
