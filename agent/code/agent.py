@@ -1,7 +1,9 @@
 """Claude Agent SDK query logic for log analysis."""
 
-import time
 import logging
+import os
+import time
+from pathlib import Path
 
 from claude_agent_sdk import (
     query,
@@ -14,9 +16,20 @@ from claude_agent_sdk import (
     ToolResultBlock,
 )
 
-from core.config import ANTHROPIC_API_KEY, AGENT_PROMPT, PROJECT_DIR, SCHEMAS_DIR
+log = logging.getLogger(__name__)
 
-log = logging.getLogger("inlog-agent")
+# Resolve paths relative to this file
+AGENT_DIR = Path(__file__).resolve().parent.parent  # → agent/
+PROJECT_DIR = AGENT_DIR.parent  # → inlog-agent/
+SCHEMAS_DIR = PROJECT_DIR / "data" / "schemas"
+SCHEMAS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Load agent system prompt from CLAUDE.md
+AGENT_PROMPT = (AGENT_DIR / "CLAUDE.md").read_text()
+
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+if not ANTHROPIC_API_KEY:
+    log.warning("ANTHROPIC_API_KEY is not set — agent calls will fail.")
 
 
 def build_prompt(file_id: str, question: str) -> str:
@@ -27,8 +40,8 @@ def build_prompt(file_id: str, question: str) -> str:
     if schema_path.exists():
         schema_content = schema_path.read_text()
         return (
-            f"The user is working with log file at data/uploads/{file_id}.log. "
-            f"The schema file path is data/schemas/{file_id}.json. "
+            f"The user is working with log file at ../data/uploads/{file_id}.log. "
+            f"The schema file path is ../data/schemas/{file_id}.json. "
             f"A schema has ALREADY been inferred and proposed to the user. "
             f"Here is the current schema:\n{schema_content}\n\n"
             f"The user's message is: {question}\n\n"
@@ -38,8 +51,8 @@ def build_prompt(file_id: str, question: str) -> str:
         )
 
     return (
-        f"The user is working with log file at data/uploads/{file_id}.log. "
-        f"The schema file path is data/schemas/{file_id}.json. "
+        f"The user is working with log file at ../data/uploads/{file_id}.log. "
+        f"The schema file path is ../data/schemas/{file_id}.json. "
         f"{question}"
     )
 
@@ -56,12 +69,13 @@ async def run_agent(file_id: str, question: str) -> dict:
         system_prompt=AGENT_PROMPT,
         allowed_tools=["Bash", "Read", "Write", "Glob", "Grep"],
         permission_mode="bypassPermissions",
-        cwd=str(PROJECT_DIR),
+        cwd=str(AGENT_DIR),
         max_turns=10,
         env={"ANTHROPIC_API_KEY": ANTHROPIC_API_KEY},
     )
 
     result_text = ""
+    last_assistant_text = ""
     files: list[str] = []
     cost_usd = None
     num_turns = None
@@ -74,8 +88,10 @@ async def run_agent(file_id: str, question: str) -> dict:
         elapsed = time.time() - start
 
         if isinstance(message, AssistantMessage):
+            turn_text_parts = []
             for block in message.content:
                 if isinstance(block, TextBlock):
+                    turn_text_parts.append(block.text)
                     preview = block.text[:120].replace("\n", " ")
                     log.info(
                         "[%.1fs] Assistant text: %s%s",
@@ -97,6 +113,10 @@ async def run_agent(file_id: str, question: str) -> dict:
                 elif isinstance(block, ToolResultBlock):
                     preview = str(block.content)[:120] if block.content else "(empty)"
                     log.info("[%.1fs] Tool result: %s", elapsed, preview)
+
+            # Keep the last assistant text as fallback when ResultMessage.result is empty
+            if turn_text_parts:
+                last_assistant_text = "\n\n".join(turn_text_parts)
 
         elif isinstance(message, ResultMessage):
             result_text = message.result or ""
@@ -120,7 +140,7 @@ async def run_agent(file_id: str, question: str) -> dict:
     )
 
     return {
-        "answer": result_text,
+        "answer": result_text or last_assistant_text,
         "files": files,
         "cost_usd": cost_usd,
         "num_turns": num_turns,

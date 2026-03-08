@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Write(scripts/app-logs-2024/**)",
+      "Write(memory/app-logs-2024/**)",
+      "Write(output/app-logs-2024/**)",
+      "Write(../data/schemas/**)",
+      "Write(../outputs/**)",
+      "Edit(scripts/app-logs-2024/**)",
+      "Edit(memory/app-logs-2024/**)",
+      "Edit(output/app-logs-2024/**)",
+      "Edit(../data/schemas/**)",
+      "Edit(../outputs/**)",
+      "Bash(python code/setup_session.py *)",
+      "Bash(python scripts/app-logs-2024/**)",
+      "Bash(python -c *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(pwd)"
+    ],
+    "deny": [
+      "Write(../data/uploads/**)",
+      "Write(code/**)",
+      "Write(CLAUDE.md)",
+      "Write(.claude/**)",
+      "Edit(../data/uploads/**)",
+      "Edit(code/**)",
+      "Edit(CLAUDE.md)",
+      "Edit(.claude/**)",
+      "Bash(rm *)",
+      "Bash(git *)",
+      "Bash(sudo *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(chmod *)",
+      "Bash(chown *)",
+      "Bash(kill *)"
+    ]
+  }
+}
