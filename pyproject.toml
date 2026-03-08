@@ -11,3 +11,16 @@ dependencies = [
     "python-dotenv>=1.2,<2",
     "python-multipart>=0.0.22,<1",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0,<9",
+    "httpx>=0.27,<1",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "smoke: fast sanity checks run by default on every invocation",
+    "integration: hits the real Claude agent (slow, needs ANTHROPIC_API_KEY)",
+]
+addopts = "-m smoke"
