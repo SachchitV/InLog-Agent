@@ -31,7 +31,23 @@ app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 
 @app.post("/upload", response_model=UploadResponse)
 async def upload(file: UploadFile):
-    """Accept a log file upload, auto-create a session, and save the file."""
+    """Accept a log file upload, auto-create a session, and persist the file to disk.
+
+    A new session and file ID are generated for every upload so each file is
+    processed in complete isolation. The saved filename is ``{file_id}.log``
+    regardless of the original name (the original name is echoed back in the
+    response for display purposes).
+
+    Args:
+        file: The multipart file sent by the client via ``POST /upload``.
+
+    Returns:
+        UploadResponse: Contains ``file_id``, ``session_id``, and ``filename``.
+
+    Raises:
+        HTTPException: FastAPI raises 422 automatically if the ``file`` field
+            is absent from the request.
+    """
 
     # Auto-create a new session for each upload
     session_id = generate_session_id()
@@ -53,7 +69,24 @@ async def upload(file: UploadFile):
 
 @app.post("/ask", response_model=AskResponse)
 async def ask(request: AskRequest):
-    """Send a question to the Claude agent with session and file context."""
+    """Forward a user question to the Claude agent and return its response.
+
+    Delegates to ``core.agent.run_agent``, which spawns a Claude Code CLI
+    subprocess scoped to the given session. The agent reads the uploaded log,
+    infers or reuses a schema, parses data, and generates charts depending on
+    where in the workflow the session is.
+
+    Args:
+        request: AskRequest containing ``session_id``, ``file_id``, and
+            ``question``.
+
+    Returns:
+        AskResponse: Contains ``answer`` (agent text), ``files`` (chart paths
+            written to ``outputs/``), ``cost_usd``, and ``num_turns``.
+
+    Raises:
+        HTTPException: FastAPI raises 422 if required request fields are missing.
+    """
 
     result = await _agent.run_agent(request.session_id, request.file_id, request.question)
     return AskResponse(**result)
@@ -61,6 +94,11 @@ async def ask(request: AskRequest):
 
 @app.get("/health", response_model=HealthResponse)
 async def health():
+    """Liveness check — confirms the server process is running.
+
+    Returns:
+        HealthResponse: Always ``{"status": "ok"}`` while the process is alive.
+    """
     return HealthResponse(status="ok")
 
 

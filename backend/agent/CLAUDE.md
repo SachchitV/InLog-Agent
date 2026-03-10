@@ -11,15 +11,10 @@ prefixed with `../` (which refers to `backend/`).
 
 ---
 
-## First Action on Every Conversation
+## Todo Tracking
 
-1. Check `workspace/` for existing sessions: look for `workspace/*/state.json` files.
-2. If exactly one session exists → announce "Resuming session `{sid}` at step {step}: {step_name}."
-3. If multiple sessions exist → list them and ask: "Which session would you like to continue?"
-4. If no sessions exist → ask: "Please provide a session name (e.g. `syslog-2025`)."
-   Then create `workspace/{name}/` and `workspace/{name}/scripts/` directories,
-   and write an initial `state.json`.
-5. After identifying the session, read `workspace/{sid}/state.json` fully and summarize current status.
+Use `TodoWrite` at the start of each task to plan your steps, and update todos as you complete them.
+This is how your reasoning and progress are surfaced to the user.
 
 ---
 
@@ -32,7 +27,7 @@ prefixed with `../` (which refers to `backend/`).
 | `../data/{sid}/store.db` | READ + WRITE | SQLite database |
 | `../outputs/{sid}/` | READ + WRITE | Charts served by FastAPI |
 | `.claude/skills/` | READ-ONLY | Skill library; NEVER modify |
-| `workspace/{sid}/` | READ + WRITE | State, decisions, scripts |
+| `workspace/{sid}/scripts/` | READ + WRITE | Ad-hoc scripts |
 | `CLAUDE.md` | READ-ONLY | This file; NEVER modify |
 | `.claude/settings.json` | READ-ONLY | Settings; NEVER modify |
 
@@ -95,15 +90,7 @@ Before writing a new script, ALWAYS check for reusable patterns:
 
 ---
 
-## 5-Step Workflow
-
-### Step 0: INIT
-- Verify session exists (check `workspace/{sid}/state.json`)
-- Check what log files are available in `../data/{sid}/uploads/`
-- Read any existing schemas in `../data/{sid}/schemas/`
-- Announce what was found; proceed to Step 1
-
----
+## 4-Step Workflow
 
 ### Step 1: INFER SCHEMA
 **What to read:** Log file from `../data/{sid}/uploads/{file_id}.log`
@@ -111,7 +98,6 @@ Before writing a new script, ALWAYS check for reusable patterns:
 - Schema JSON to `../data/{sid}/schemas/{file_id}.json`
 - Script to `workspace/{sid}/scripts/step1_infer_{file_id}.py`
 **User checkpoint?** No (runs autonomously)
-**State update:** `{"step": 1, "step_name": "INFER_SCHEMA", "status": "in_progress"}`
 
 Process:
 1. Read first 30-50 lines of the log file
@@ -120,7 +106,6 @@ Process:
 4. Infer the best schema (tables, columns, types)
 5. Write schema JSON to `../data/{sid}/schemas/{file_id}.json` using the **exact** format below
 6. Present proposed schema to user
-7. Update state: `{"step": 2, "status": "awaiting_user"}`
 
 **Required schema JSON format** (do NOT deviate from this structure):
 ```json
@@ -156,9 +141,6 @@ Reply with:
 - Your edits as text, and I'll update the schema
 ```
 
-When user approves → update state:
-`{"step": 3, "step_name": "PARSE_AND_LOAD", "status": "pending", "flags": {"schema_approved": true}}`
-
 ---
 
 ### Step 3: PARSE & LOAD
@@ -167,7 +149,6 @@ When user approves → update state:
 - Parser script to `workspace/{sid}/scripts/step3_parse_{file_id}.py`
 - Parsed data into `../data/{sid}/store.db`
 **User checkpoint?** No
-**State update:** `{"step": 3, "status": "in_progress"}`
 
 Process:
 1. Write a parser script to `workspace/{sid}/scripts/` (check past scripts first!)
@@ -178,7 +159,6 @@ Process:
 6. Store numeric values as numbers, not strings
 7. Skip unparseable lines, count failures
 8. Report summary to user
-9. Update state: `{"step": 4, "status": "pending", "flags": {"data_loaded": true}}`
 
 ---
 
@@ -188,7 +168,6 @@ Process:
 - Chart scripts to `workspace/{sid}/scripts/step4_chart_{description}.py`
 - Chart PNGs to `../outputs/{sid}/`
 **User checkpoint?** No (iterative — user can request more charts)
-**State update:** `{"step": 4, "status": "in_progress"}`
 
 Process:
 1. Generate initial overview charts (timeline, level distribution, etc.)
@@ -196,43 +175,6 @@ Process:
 3. Save PNGs to `../outputs/{sid}/` with descriptive filenames
 4. Use matplotlib with `matplotlib.use('Agg')` for headless rendering
 5. Answer follow-up questions about the data
-
----
-
-## State Update Rule
-
-After EVERY completed step, update `workspace/{sid}/state.json` immediately. Never skip this.
-Format:
-```json
-{
-  "session_id": "{sid}",
-  "step": 0,
-  "step_name": "INIT",
-  "status": "in_progress|awaiting_user|complete",
-  "created_at": "...",
-  "updated_at": "...",
-  "files": {
-    "file_id": {"filename": "...", "lines": 0, "parsed": false}
-  },
-  "flags": {
-    "schema_approved": false,
-    "data_loaded": false
-  }
-}
-```
-
-Log key decisions to `workspace/{sid}/decisions.md` with timestamp.
-
----
-
-## Resumption Protocol
-
-When a conversation starts with an existing session:
-1. Read `workspace/{sid}/state.json`
-2. Announce: "Resuming session `{sid}`. Current step: {step} ({step_name}), status: {status}."
-3. For `in_progress` status → check if work completed (check output files) and either continue or restart
-4. For `awaiting_user` status → re-display the checkpoint message
-5. For `complete` status → offer additional analysis or new session
 
 ---
 
@@ -254,7 +196,6 @@ On any failure:
 
 1. `.claude/skills/` is IMMUTABLE — only humans edit skills
 2. `../data/{sid}/uploads/` is READ-ONLY — user places files there; agent never touches them
-3. State is always persisted — update `state.json` after every step
-4. Scripts are always saved — never generate throwaway code; always write to `workspace/{sid}/scripts/`
-5. Session isolation — only write to directories scoped to your current `{sid}`
-6. Always use `logging` — never `print()`
+3. Scripts are always saved — never generate throwaway code; always write to `workspace/{sid}/scripts/`
+4. Session isolation — only write to directories scoped to your current `{sid}`
+5. Always use `logging` — never `print()`

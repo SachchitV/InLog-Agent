@@ -31,7 +31,20 @@ SAMPLE_LOG = Path(__file__).resolve().parent.parent / "fixtures" / "rfnd_flight_
 
 
 def _run(coro):
-    """Run an async coroutine synchronously."""
+    """Run an async coroutine synchronously in a fresh event loop.
+
+    Used to call async agent functions from synchronous pytest test functions
+    without requiring pytest-asyncio.
+
+    Args:
+        coro: An awaitable coroutine object to execute.
+
+    Returns:
+        Whatever the coroutine returns.
+
+    Raises:
+        Any exception raised by the coroutine is propagated as-is.
+    """
     loop = asyncio.new_event_loop()
     try:
         return loop.run_until_complete(coro)
@@ -41,7 +54,22 @@ def _run(coro):
 
 @pytest.mark.integration
 def test_full_user_journey():
-    """Simulate the exact user journey: upload a file, get schema, confirm, get charts."""
+    """Simulate the complete user journey against the live Claude Agent SDK.
+
+    Covers the two-turn interaction:
+      1. Upload a log file and request schema inference.
+      2. Confirm the schema and request parsing + chart generation.
+
+    Assertions:
+      - Agent returns a non-empty answer for both turns.
+      - Schema JSON is written to ``schemas/{file_id}.json`` with at least one table.
+      - SQLite database is created at ``store.db``.
+      - At least one chart PNG is written to ``outputs/{sid}/``.
+
+    Raises:
+        AssertionError: If any of the above artifacts are missing or malformed.
+        Exception: Any unhandled SDK or network error propagates from ``run_agent``.
+    """
 
     session_id = generate_session_id()
     file_id = "flight_telemetry"
