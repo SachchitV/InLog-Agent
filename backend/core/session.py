@@ -10,16 +10,12 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from core.config import PROJECT_DIR
+from core.config import DATA_DIR, OUTPUTS_DIR, PROJECT_DIR
 
 log = logging.getLogger(__name__)
 
 # Agent folder — the pure Claude Code project
 AGENT_DIR = PROJECT_DIR / "agent"
-
-# Base directories for session-scoped data
-DATA_DIR = PROJECT_DIR / "data"
-OUTPUTS_BASE = PROJECT_DIR / "outputs"
 
 
 def get_session_paths(session_id: str) -> dict:
@@ -44,7 +40,7 @@ def get_session_paths(session_id: str) -> dict:
         "db_path":      DATA_DIR / session_id / "store.db",
 
         # Session-scoped outputs
-        "outputs_dir":  OUTPUTS_BASE / session_id,
+        "outputs_dir":  OUTPUTS_DIR / session_id,
 
         # Root references
         "agent_root":   AGENT_DIR,
